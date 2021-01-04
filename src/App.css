@@ -56,20 +56,45 @@ html {
   text-align: center;
 }
 
-.App-header {
+.environment {
   background-color: #282c34;
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
+}
+
+.card-table-border {
+  background: radial-gradient(#4E1227, #7E4257);
+  height: 55rem;
+  width: 95rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   font-size: calc(10px + 2vmin);
   color: white;
+  margin: auto;
+  border-radius: 30rem;
+  border: 2px solid #4E1227;
+  /* border: 2rem solid #67273D; */
+}
+.card-table {
+  background: radial-gradient(#228B22, #35654D);
+  height: 50rem;
+  width: 90rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+  margin: auto;
+  border-radius: 30rem;
+  border: 2px solid #7E4257;
 }
 
 h1 {
-  font-size: 10rem;;
-  margin: 2rem;
+  font-size: 10rem;
 }
 
 button {
@@ -98,4 +123,38 @@ span {
 
 .shuffling {
   /* margin-top: 0.5rem; */
+}
+
+.card-container {
+  display: flex;
+  flex-direction: column;
+  max-height: 50rem;;
+}
+.cards img{
+  height: 12.5rem;
+  border: 1px solid black;
+  border-radius: 10px;
+}
+
+.dealer-cards {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;  
+}
+
+.player-cards {
+  display: flex;
+  justify-content: center;
+  padding-top: 4rem;  
+}
+
+.playing-options {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.playing-options button {
+  width: 10rem;
 }

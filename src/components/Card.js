@@ -34,6 +34,7 @@ const Card = ({
   const [playerBust, setPlayerBust] = useState(false);
   const [newPlayerTotal, setNewPlayerTotal] = useState(null);
   const [newDealerTotal, setNewDealerTotal] = useState(null);
+  const [isDealerPlaying, setIsDealerPlaying] = useState(false);
 
   if (error) {
     return <h2>{error.message}</h2>;
@@ -42,7 +43,8 @@ const Card = ({
     return (
       <h2>
         Shuffling deck...
-        <Loader className="shuffling"
+        <Loader
+          className="shuffling"
           type="Hearts"
           color="#626977"
           height="100"
@@ -53,7 +55,7 @@ const Card = ({
   }
   if (isDealing) {
     return <h2>Dealing cards...</h2>;
-  };
+  }
 
   const handleGetDeck = () => {
     getDeck();
@@ -71,9 +73,14 @@ const Card = ({
     }
   };
   const handleDealerHit = () => {
-    setNewDealerTotal(dealerTotal);
-    if (newDealerTotal < 16) {
-      getDealerCard(deckID);
+    setIsDealerPlaying(true);
+    if (isDealerPlaying === true) {
+      setNewDealerTotal(dealerTotal);
+      if (newDealerTotal < 16) {
+        getDealerCard(deckID);
+      } else {
+        setIsDealerPlaying(false);
+      }
     }
     setGameOver(true);
   };
@@ -86,27 +93,45 @@ const Card = ({
 
   return (
     <div>
-      {isFetchingCard ? <h2>Hitting...</h2> : null}
-      {isFetchingDealerCard ? <h2>Dealer hitting...</h2> : null}
-      <div className="dealer-cards">
-        {dealerCards ? <Dealer cards={dealerCards} /> : null}
-        {dealerCards ? <p>Total: {dealerTotal}</p> : null}
+      <div className="card-table-border">
+        <div className="card-table">
+          <div className="card-container">
+            {isFetchingCard ? <h2>Hitting...</h2> : null}
+            {isFetchingDealerCard ? <h2>Dealer hitting...</h2> : null}
+
+            <div className="dealer-cards">
+              {dealerCards ? (
+                <Dealer cards={dealerCards} total={dealerTotal} />
+              ) : null}
+            </div>
+            <div className="player-cards">
+              {playerCards ? (
+                <Player cards={playerCards} total={playerTotal} />
+              ) : null}
+            </div>
+          </div>
+        </div>
       </div>
-      <div className="player-cards">
-        {playerCards ? <Player cards={playerCards} /> : null}
-        {playerCards ? <p>Total: {playerTotal}</p> : null}
-      </div>
-      {playerCards && !gameOver ? <button onClick={handlePlayerHit}>Hit</button> : null}
-      {playerCards && !playerBust ? <button onClick={handleDealerHit}>Stay</button> : null}
-      {deckID ? null : <button onClick={handleGetDeck}>Get New Deck</button>}
-      {deckID && !playerCards ? (
-        <button onClick={handleDealCards}>Deal Cards</button>
-      ) : null}
-      {gameOver || error || playerBust ? (
-        <button onClick={handlePlayAgain}>Play Again</button>
-      ) : null}
-      {deckID ? <span>Cards remaining in deck: {cardsRemaining}</span> : null}
-      {playerBust ? <div className="busted">You busted!</div> : null}
+        <div className="playing-options">
+          {playerCards && !gameOver ? (
+            <button onClick={handlePlayerHit}>Hit</button>
+          ) : null}
+          {/* {playerCards && !playerBust ? <button onClick={setIsDealerPlaying(true)}>Stay</button> : null} */}
+          {playerCards && !playerBust ? <button>Stay</button> : null}
+          {gameOver || error || playerBust ? (
+            <button onClick={handlePlayAgain}>Play Again</button>
+          ) : null}
+          {deckID ? null : (
+            <button onClick={handleGetDeck}>Get New Deck</button>
+          )}
+          {deckID && !playerCards ? (
+            <button onClick={handleDealCards}>Deal Cards</button>
+          ) : null}
+          {deckID ? (
+            <span>Cards remaining in deck: {cardsRemaining}</span>
+          ) : null}
+          {playerBust ? <div className="busted">You busted!</div> : null}
+        </div>
     </div>
   );
 };

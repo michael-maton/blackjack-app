@@ -30,7 +30,7 @@ export const dealCards = (deckID) => dispatch => {
     axios
         .get(`https://deckofcardsapi.com/api/deck/${deckID}/draw/?count=4`)
         .then(res => {
-            console.log(res.data.cards);
+            console.log(res);
             dispatch({type: DEALING_CARDS_SUCCESS, payload: res.data.cards})
         })
         .catch(err => {

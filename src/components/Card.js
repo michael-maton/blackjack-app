@@ -1,16 +1,17 @@
-import React, { useState } from "react";
-import { connect } from "react-redux";
-import Player from "./Player";
-import Dealer from "./Dealer";
-import Loader from "react-loader-spinner";
+import React, { useEffect, useState } from 'react';
+import { connect } from 'react-redux';
+import Player from './Player';
+import Dealer from './Dealer';
+import Loader from 'react-loader-spinner';
+import './Card.css';
 
 import {
   getPlayerCard,
   getDeck,
   dealCards,
-  getDealerCard,
   startNewGame,
-} from "../actions";
+  decrementAce,
+} from '../actions';
 
 const Card = ({
   deckID,
@@ -24,16 +25,36 @@ const Card = ({
   error,
   playerTotal,
   dealerTotal,
+  aceActive,
   getPlayerCard,
-  getDealerCard,
   getDeck,
   dealCards,
   startNewGame,
+  decrementAce,
 }) => {
   const [gameOver, setGameOver] = useState(false);
-  const [playerBust, setPlayerBust] = useState(false);
-  const [newPlayerTotal, setNewPlayerTotal] = useState(null);
-  const [newDealerTotal, setNewDealerTotal] = useState(null);
+  const [playerLose, setPlayerLose] = useState(false);
+  const [_, setNewPlayerTotal] = useState(null);
+  const [playerWin, setPlayerWin] = useState(false);
+  const message = playerLose ? 'You Lose!' : playerWin ? 'You Win' : '';
+
+  useEffect(() => {
+    const evaluateWinner = () => {
+      if (playerTotal > 21) {
+        if (aceActive === 0) {
+          setPlayerLose(true);
+          setGameOver(true);
+        }
+        if (aceActive > 0) {
+          decrementAce();
+        }
+      }
+      checkforLimit();
+    };
+    if (playerTotal) {
+      evaluateWinner();
+    }
+  }, [playerTotal, aceActive, cardsRemaining]);
 
   if (error) {
     return <h2>{error.message}</h2>;
@@ -42,7 +63,8 @@ const Card = ({
     return (
       <h2>
         Shuffling deck...
-        <Loader className="shuffling"
+        <Loader
+          className="shuffling"
           type="Hearts"
           color="#626977"
           height="100"
@@ -53,6 +75,18 @@ const Card = ({
   }
   if (isDealing) {
     return <h2>Dealing cards...</h2>;
+  }
+
+  const checkforLimit = () => {
+    if (playerTotal === 21) {
+      if (dealerTotal === playerTotal) {
+        setPlayerLose(true);
+        setGameOver(true);
+      } else {
+        setPlayerWin(true);
+        setGameOver(true);
+      }
+    }
   };
 
   const handleGetDeck = () => {
@@ -62,25 +96,23 @@ const Card = ({
     dealCards(deckID);
   };
   const handlePlayerHit = () => {
-    setNewPlayerTotal(playerTotal);
-    console.log(newPlayerTotal);
-    if (newPlayerTotal > 21) {
-      setPlayerBust(true);
-    } else {
-      getPlayerCard(deckID);
-    }
+    getPlayerCard(deckID);
+    setNewPlayerTotal((playerTotal) => playerTotal);
   };
-  const handleDealerHit = () => {
-    setNewDealerTotal(dealerTotal);
-    if (newDealerTotal < 16) {
-      getDealerCard(deckID);
+  const handleStay = () => {
+    if (playerTotal < 21) {
+      if (playerTotal > dealerTotal) {
+        setPlayerWin(true);
+        setGameOver(true);
+      }
     }
-    setGameOver(true);
+    checkforLimit();
   };
 
   const handlePlayAgain = () => {
     setGameOver(false);
-    setPlayerBust(false);
+    setPlayerLose(false);
+    setPlayerWin(false);
     startNewGame();
   };
 
@@ -92,21 +124,30 @@ const Card = ({
         {dealerCards ? <Dealer cards={dealerCards} /> : null}
         {dealerCards ? <p>Total: {dealerTotal}</p> : null}
       </div>
+      {playerLose ? <div className="busted">{message}</div> : null}
+      {playerWin ? <div className="busted">{message}</div> : null}
       <div className="player-cards">
         {playerCards ? <Player cards={playerCards} /> : null}
         {playerCards ? <p>Total: {playerTotal}</p> : null}
       </div>
-      {playerCards && !gameOver ? <button onClick={handlePlayerHit}>Hit</button> : null}
-      {playerCards && !playerBust ? <button onClick={handleDealerHit}>Stay</button> : null}
-      {deckID ? null : <button onClick={handleGetDeck}>Get New Deck</button>}
-      {deckID && !playerCards ? (
+      {playerCards && !gameOver && cardsRemaining >= 4 ? (
+        <button onClick={handlePlayerHit}>Hit</button>
+      ) : null}
+      {playerCards && !gameOver && cardsRemaining >= 4 ? (
+        <button onClick={handleStay}>Stay</button>
+      ) : null}
+      {deckID && cardsRemaining >= 4 ? null : (
+        <button onClick={handleGetDeck}>Get New Deck</button>
+      )}
+      {deckID && !playerCards && cardsRemaining >= 4 ? (
         <button onClick={handleDealCards}>Deal Cards</button>
       ) : null}
-      {gameOver || error || playerBust ? (
+      {gameOver || error || playerLose || playerWin ? (
         <button onClick={handlePlayAgain}>Play Again</button>
       ) : null}
-      {deckID ? <span>Cards remaining in deck: {cardsRemaining}</span> : null}
-      {playerBust ? <div className="busted">You busted!</div> : null}
+      {deckID && cardsRemaining >= 4 ? (
+        <span>Cards remaining in deck: {cardsRemaining}</span>
+      ) : null}
     </div>
   );
 };
@@ -124,6 +165,7 @@ const mapStateToProps = (state) => {
     error: state.error,
     playerTotal: state.playerTotal,
     dealerTotal: state.dealerTotal,
+    aceActive: state.aceActive,
   };
 };
 
@@ -131,6 +173,6 @@ export default connect(mapStateToProps, {
   getPlayerCard,
   getDeck,
   dealCards,
-  getDealerCard,
   startNewGame,
+  decrementAce,
 })(Card);

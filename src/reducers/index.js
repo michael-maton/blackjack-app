@@ -1,21 +1,19 @@
 import {
-    FETCHING_DECK_START,
-    FETCHING_DECK_SUCCESS,
-    FETCHING_DECK_FAIL,
-    DEALING_CARDS_START,
-    DEALING_CARDS_SUCCESS,
-    DEALING_CARDS_FAIL,
-    FETCHING_PLAYER_CARD_START,
-    FETCHING_PLAYER_CARD_SUCCESS,
-    FETCHING_PLAYER_CARD_FAIL,
-    FETCHING_DEALER_CARD_START,
-    FETCHING_DEALER_CARD_SUCCESS,
-    FETCHING_DEALER_CARD_FAIL,
-    RESTART_GAME,
-} from "./../actions";
+  FETCHING_DECK_START,
+  FETCHING_DECK_SUCCESS,
+  FETCHING_DECK_FAIL,
+  DEALING_CARDS_START,
+  DEALING_CARDS_SUCCESS,
+  DEALING_CARDS_FAIL,
+  FETCHING_PLAYER_CARD_START,
+  FETCHING_PLAYER_CARD_SUCCESS,
+  FETCHING_PLAYER_CARD_FAIL,
+  RESTART_GAME,
+  DECREMENT_ACE,
+} from './../actions';
 
 const initialState = {
-  deckID: "",
+  deckID: '',
   cardsRemaining: null,
   isShuffling: false,
   isDealing: false,
@@ -23,20 +21,42 @@ const initialState = {
   dealerCards: null,
   isFetchingCard: false,
   isFetchingDealerCard: false,
-  error: "",
+  error: '',
   playerTotal: null,
   dealerTotal: null,
+  aceActive: 0,
 };
 
 const valueConverter = (value) => {
-    let newValue = 0;
-    if (value === "KING" || value === "QUEEN" || value === "JACK"){
-        newValue = 10;
-    } else if (value === "ACE") {
-        newValue = 11;
-    } else {newValue = value}
-    return parseInt(newValue);
-}
+  let newValue = 0;
+  if (value === 'KING' || value === 'QUEEN' || value === 'JACK') {
+    newValue = 10;
+  } else if (value === 'ACE') {
+    newValue = 11;
+  } else {
+    newValue = value;
+  }
+  return parseInt(newValue);
+};
+
+const calculateTotal = (state, value) => {
+  if (state.aceActive > 0 && state.playerTotal + value > 21) {
+    state.playerTotal = state.playerTotal - 10 + value;
+    state.aceActive -= 1;
+  } else if (state.aceActive > 0 && state.playerTotal + value < 21) {
+    state.playerTotal = state.playerTotal + value;
+  } else if (state.aceActive === 0 && state.playerTotal + value > 21) {
+    if (value === 11) {
+      state.playerTotal = state.playerTotal + 1;
+      state.aceActive += 1;
+    } else {
+      state.playerTotal = state.playerTotal + value;
+    }
+  } else {
+    state.playerTotal = state.playerTotal + value;
+  }
+  return state.playerTotal;
+};
 
 export const reducer = (state = initialState, action) => {
   switch (action.type) {
@@ -44,7 +64,7 @@ export const reducer = (state = initialState, action) => {
       return {
         ...state,
         isShuffling: true,
-        error: "",
+        error: '',
       };
     case FETCHING_DECK_SUCCESS:
       return {
@@ -54,6 +74,10 @@ export const reducer = (state = initialState, action) => {
         playerCards: null,
         dealerCards: null,
         isShuffling: false,
+        playerTotal: null,
+        dealerTotal: null,
+        error: '',
+        aceActive: 0,
       };
     case FETCHING_DECK_FAIL:
       return {
@@ -65,27 +89,36 @@ export const reducer = (state = initialState, action) => {
       return {
         ...state,
         isDealing: true,
-        error: "",
+        error: '',
       };
     case DEALING_CARDS_SUCCESS:
-        let values = action.payload.map(item => {
-            if (item.value === "KING" || item.value === "QUEEN" || item.value === "JACK"){
-                item.value = "10";
-            } else if (item.value === "ACE") {
-                item.value = "11";
-            }
-            return parseInt(item.value);
-        });
-        const playerCardValues = values[0] + values[2];
-        const dealerCardValues = values[1] + values[3]; 
+      let values = action.payload.cards.map((item) => {
+        if (
+          item.value === 'KING' ||
+          item.value === 'QUEEN' ||
+          item.value === 'JACK'
+        ) {
+          item.value = '10';
+        } else if (item.value === 'ACE') {
+          item.value = '11';
+        }
+        return parseInt(item.value);
+      });
+      const playerCardValues = values[0] + values[2];
+      const dealerCardValues = values[1] + values[3];
       return {
         ...state,
-        cardsRemaining: state.cardsRemaining-4,
-        playerCards: [action.payload[0], action.payload[2]],
-        playerTotal: state.playerTotal + playerCardValues, 
-        dealerCards: [action.payload[1], action.payload[3]],
-        dealerTotal: state.dealerTotal + dealerCardValues, 
+        cardsRemaining: action.payload.remaining,
+        playerCards: [action.payload.cards[0], action.payload.cards[2]],
+        playerTotal: state.playerTotal + playerCardValues,
+        dealerCards: [action.payload.cards[1], action.payload.cards[3]],
+        dealerTotal: state.dealerTotal + dealerCardValues,
         isDealing: false,
+        aceActive: [action.payload.cards[0], action.payload.cards[2]].some(
+          (item) => item.value === '11'
+        )
+          ? state.aceActive + 1
+          : state.aceActive,
       };
     case DEALING_CARDS_FAIL:
       return {
@@ -97,15 +130,23 @@ export const reducer = (state = initialState, action) => {
       return {
         ...state,
         isFetchingCard: true,
-        error: "",
+        error: '',
       };
     case FETCHING_PLAYER_CARD_SUCCESS:
       return {
         ...state,
-        cardsRemaining: state.cardsRemaining-1,
-        playerCards: [...state.playerCards, action.payload[0]],
-        playerTotal: state.playerTotal + valueConverter(action.payload[0].value),
+        cardsRemaining: action.payload.remaining,
+        playerCards: [...state.playerCards, action.payload.cards[0]],
+        playerTotal: calculateTotal(
+          state,
+          valueConverter(action.payload.cards[0].value)
+        ),
+        // state.playerTotal + valueConverter(action.payload[0].value),
         isFetchingCard: false,
+        aceActive:
+          action.payload.cards[0].value === '11'
+            ? state.aceActive + 1
+            : state.aceActive,
       };
     case FETCHING_PLAYER_CARD_FAIL:
       return {
@@ -113,34 +154,22 @@ export const reducer = (state = initialState, action) => {
         error: action.payload,
       };
 
-    case FETCHING_DEALER_CARD_START:
-      return {
-        ...state,
-        isFetchingDealerCard: true,
-        error: "",
-      };
-    case FETCHING_DEALER_CARD_SUCCESS:
-      return {
-        ...state,
-        cardsRemaining: state.cardsRemaining-1,
-        dealerCards: [...state.dealerCards, action.payload[0]],
-        dealerTotal: state.dealerTotal + valueConverter(action.payload[0].value),
-        isFetchingDealerCard: false,
-      };
-    case FETCHING_DEALER_CARD_FAIL:
-      return {
-        ...state,
-        error: action.payload,
-      };
     case RESTART_GAME:
-        return {
-            ...state,
-            playerCards: null,
-            dealerCards: null,
-            playerTotal: null,
-            dealerTotal: null,
-            error: "",
-        }
+      return {
+        ...state,
+        playerCards: null,
+        dealerCards: null,
+        playerTotal: null,
+        dealerTotal: null,
+        error: '',
+        aceActive: 0,
+      };
+    case DECREMENT_ACE:
+      return {
+        ...state,
+        playerTotal: state.playerTotal - 10,
+        aceActive: state.aceActive - 1,
+      };
     default:
       return state;
   }

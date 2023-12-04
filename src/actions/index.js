@@ -4,18 +4,16 @@ export const FETCHING_DECK_START = 'FETCHING_DECK_START';
 export const FETCHING_DECK_SUCCESS = 'FETCHING_DECK_SUCCESS';
 export const FETCHING_DECK_FAIL = 'FETCHING_DECK_FAIL';
 
-export const getDeck = () => (dispatch) => {
+export const getDeck = () => async (dispatch) => {
   dispatch({ type: FETCHING_DECK_START });
-  setTimeout(() => {
-    axios
-      .get('https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=1')
-      .then((res) => {
-        dispatch({ type: FETCHING_DECK_SUCCESS, payload: res.data });
-      })
-      .catch((err) => {
-        dispatch({ type: FETCHING_DECK_FAIL, payload: err });
-      });
-  }, 3000);
+  try {
+    let response = await axios.get(
+      'https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=1'
+    );
+    dispatch({ type: FETCHING_DECK_SUCCESS, payload: response.data });
+  } catch (err) {
+    dispatch({ type: FETCHING_DECK_FAIL, payload: err });
+  }
 };
 
 export const DEALING_CARDS_START = 'DEALING_CARDS_START';
@@ -55,16 +53,16 @@ export const FETCHING_PLAYER_CARD_START = 'FETCHING_PLAYER_CARD_START';
 export const FETCHING_PLAYER_CARD_SUCCESS = 'FETCHING_PLAYER_CARD_SUCCESS';
 export const FETCHING_PLAYER_CARD_FAIL = 'FETCHING_PLAYER_CARD_FAIL';
 
-export const getPlayerCard = (deckID) => (dispatch) => {
+export const getPlayerCard = (deckID) => async (dispatch) => {
   dispatch({ type: FETCHING_PLAYER_CARD_START });
-  axios
-    .get(`https://deckofcardsapi.com/api/deck/${deckID}/draw/?count=1`)
-    .then((res) => {
-      dispatch({ type: FETCHING_PLAYER_CARD_SUCCESS, payload: res.data });
-    })
-    .catch((err) => {
-      dispatch({ type: FETCHING_PLAYER_CARD_FAIL, payload: err });
-    });
+  try {
+    let response = await axios.get(
+      `https://deckofcardsapi.com/api/deck/${deckID}/draw/?count=1`
+    );
+    dispatch({ type: FETCHING_PLAYER_CARD_SUCCESS, payload: response.data });
+  } catch (err) {
+    dispatch({ type: FETCHING_PLAYER_CARD_FAIL, payload: err });
+  }
 };
 
 export const RESTART_GAME = 'RESTART_GAME';

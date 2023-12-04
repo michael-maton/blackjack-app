@@ -1,0 +1,17 @@
+.img {
+  max-height: 9em;
+}
+
+.busted {
+  padding-bottom: 1rem;
+}
+
+.player-cards {
+  display: flex;
+  flex-direction: column;
+}
+
+.dealer-cards {
+  display: flex;
+  flex-direction: column;
+}

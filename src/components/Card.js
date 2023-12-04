@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import Player from './Player';
 import Dealer from './Dealer';
 import Loader from 'react-loader-spinner';
-import './Card.css';
+import classes from './Card.module.css';
 
 import {
   getPlayerCard,
@@ -124,8 +124,8 @@ const Card = ({
         {dealerCards ? <Dealer cards={dealerCards} /> : null}
         {dealerCards ? <p>Total: {dealerTotal}</p> : null}
       </div>
-      {playerLose ? <div className="busted">{message}</div> : null}
-      {playerWin ? <div className="busted">{message}</div> : null}
+      {playerLose ? <div className={classes.busted}>{message}</div> : null}
+      {playerWin ? <div className={classes.busted}>{message}</div> : null}
       <div className="player-cards">
         {playerCards ? <Player cards={playerCards} /> : null}
         {playerCards ? <p>Total: {playerTotal}</p> : null}

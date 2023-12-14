@@ -1,0 +1,35 @@
+.player-cards {
+  display: flex;
+  flex-direction: column;
+}
+
+.dealer-cards {
+  display: flex;
+  flex-direction: column;
+  margin-right: 7em;
+}
+
+.cards-div {
+  display: flex;
+  flex-direction: column;
+}
+
+.img {
+  max-height: 9em;
+}
+.busted {
+  width: 10em;
+  font-size: 2rem;
+  background-color: #ccc;
+  padding: 10px;
+  border: 2px solid red;
+  color: purple;
+  display: flex;
+  justify-content: center;
+  align-self: center;
+}
+.cards {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
